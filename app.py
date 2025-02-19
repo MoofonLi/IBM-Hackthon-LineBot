@@ -19,11 +19,15 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict
+from watsonx import WatsonX, Document
+from prompts import POSTOP_CARE_PROMPT, CONSULTATION_PROMPT, GENERAL_QUERY_PROMPT
 
 # 載入環境變數
 load_dotenv()
 
 app = Flask(__name__)
+
+watsonx = WatsonX()
 
 # Line Bot 設定
 configuration = Configuration(access_token=os.getenv('CHANNEL_ACCESS_TOKEN'))
@@ -109,6 +113,39 @@ def create_end_postop_buttons():
         )
     ])
 
+def load_documents():
+    docs = {}
+    try:
+        for filename in ['consultation.txt', 'general.txt', 'postop.txt']:
+            file_path = os.path.join('docs', filename)
+            
+            # Check if file exists
+            if not os.path.exists(file_path):
+                print(f"Warning: File {filename} not found")
+                continue
+                
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if content.strip():
+                        docs[filename] = Document(content=content, metadata={'source': filename})
+                        watsonx.process_document(content)
+                    else:
+                        print(f"Warning: Empty content in {filename}")
+            except UnicodeDecodeError:
+                print(f"Error: Unable to decode {filename} with UTF-8 encoding")
+            except Exception as e:
+                print(f"Error processing {filename}: {str(e)}")
+                
+    except Exception as e:
+        print(f"Error in load_documents: {str(e)}")
+        
+    return docs
+
+
+# 載入文檔
+DOCUMENTS = load_documents()
+
 @app.route("/callback", methods=['POST'])
 def callback():
     """處理 Line webhook 回調"""
@@ -125,97 +162,82 @@ def callback():
 
 @line_handler.add(MessageEvent, message=TextMessageContent)
 def handle_message(event):
-    """處理接收到的訊息"""
     user_id = event.source.user_id
     session = get_or_create_session(user_id)
-    received_message = event.message.text  # 不轉換為小寫，保持原始格式
+    received_message = event.message.text
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         
-        # 處理狀態轉換
-        if received_message in CONSULTATION_START_COMMANDS:
-            session["state"] = "consultation"
-            session["consultation_data"] = []
-            message = TextMessage(
-                text=(
-                    "Consultation mode started. Enter 'End Consultation' to finish.\n\n\n"
-                    "已開始問診模式。結束時請輸入「結束問診」。"
-                ),
-                quick_reply=create_end_consultation_buttons()
-            )
-
-        elif received_message in CONSULTATION_END_COMMANDS:
-            if session["state"] == "consultation":
-                form = generate_consultation_form(session["consultation_data"])
-                session["state"] = "free_chat"
-                message = TextMessage(
-                    text=(
-                        "Consultation ended. Here's the record:\n\n\n"
-                        "問診已結束。以下是紀錄：\n\n" + form
-                    )
-                )
-            else:
-                message = TextMessage(
-                    text=(
-                        "You are not in consultation mode.\n\n\n"
-                        "您目前不在問診模式。"
-                    )
-                )
-
-        elif received_message in POSTOP_START_COMMANDS:
+        # 首先檢查是否為開始命令
+        if received_message in POSTOP_START_COMMANDS:
             session["state"] = "postop_care"
             message = TextMessage(
-                text=(
-                    "Postoperative care mode started. Enter 'End Care' to finish.\n\n\n"
-                    "已開始術後照護模式。結束時請輸入「結束照護」。"
-                ),
+                text="開始術後照護對話。請描述您的狀況或提出問題。",
                 quick_reply=create_end_postop_buttons()
             )
-
-        elif received_message in POSTOP_END_COMMANDS:
-            if session["state"] == "postop_care":
-                session["state"] = "free_chat"
-                message = TextMessage(
-                    text=(
-                        "Postoperative care mode ended.\n\n\n"
-                        "術後照護模式已結束。"
-                    )
-                )
-            else:
-                message = TextMessage(
-                    text=(
-                        "You are not in postoperative care mode.\n\n\n"
-                        "您目前不在術後照護模式。"
-                    )
-                )
-
-        # 處理不同狀態
+            
+        elif received_message in CONSULTATION_START_COMMANDS:
+            session["state"] = "consultation"
+            message = TextMessage(
+                text="開始問診。請描述您的症狀。",
+                quick_reply=create_end_consultation_buttons()
+            )
+            
+        # 再檢查是否為結束指令
+        elif received_message in CONSULTATION_END_COMMANDS and session["state"] == "consultation":
+            form = generate_consultation_form(session["consultation_data"])
+            session["state"] = "free_chat"
+            session["consultation_data"] = []
+            message = TextMessage(text=f"問診已結束。已生成記錄表：\n{form}")
+            
+        elif received_message in POSTOP_END_COMMANDS and session["state"] == "postop_care":
+            session["state"] = "free_chat"
+            session["postop_data"] = []
+            message = TextMessage(text="術後照護對話已結束。")
+            
+        # 最後根據當前狀態處理一般對話
+        elif session["state"] == "postop_care":
+            context = watsonx.find_relevant_context(received_message)
+            response = watsonx.generate_response(
+                context=context,
+                user_input=received_message,
+                prompt_template=POSTOP_CARE_PROMPT
+            )
+            message = TextMessage(
+                text=response,
+                quick_reply=create_end_postop_buttons()
+            )
+            
         elif session["state"] == "consultation":
+            context = watsonx.find_relevant_context(received_message)
+            response = watsonx.generate_response(
+                context=context,
+                user_input=received_message,
+                prompt_template=CONSULTATION_PROMPT
+            )
             session["consultation_data"].append({
                 "patient": received_message,
+                "response": response,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
             message = TextMessage(
-                text=(
-                    "Symptom recorded. Continue or enter 'End Consultation' to finish.\n\n\n"
-                    "已記錄您的症狀。請繼續描述或輸入「結束問診」。"
-                ),
+                text=response,
                 quick_reply=create_end_consultation_buttons()
             )
-
-        elif session["state"] == "postop_care":
-            # Watson 整合的預留位置
-            message = TextMessage(
-                text=(
-                    f"Postoperative care response: {received_message}\n\n\n"
-                    f"術後照護回應：{received_message}"
-                ),
-                quick_reply=create_end_postop_buttons()
-            )
-
-        else:
-            message = TextMessage(text=handle_free_chat(received_message))
+            
+        else:  # free_chat 狀態
+            # 檢查是否為命令文字，如果不是則使用一般回應
+            if received_message in POSTOP_START_COMMANDS or received_message in CONSULTATION_START_COMMANDS:
+                context = watsonx.find_relevant_context(received_message)
+                response = watsonx.generate_response(
+                    context=context,
+                    user_input=received_message,
+                    prompt_template=GENERAL_QUERY_PROMPT
+                )
+                message = TextMessage(text=response)
+            else:
+                message = TextMessage(text=handle_free_chat(received_message))
 
         # 發送回應
         line_bot_api.reply_message_with_http_info(

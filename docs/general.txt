@@ -1,0 +1,237 @@
+大腸癌/大腸息肉切除病患就醫旅程 (Patient Journey for Colorectal Cancer/Polyp Removal)
+1. 初始症狀和尋求醫療協助 (Initial Symptoms and Seeking Medical Attention)
+中文： 病患可能出現腹痛、排便習慣改變、血便、體重減輕等症狀，因此前往消化內科門診就醫。
+英文： Patients may experience symptoms such as abdominal pain, changes in bowel habits, blood in stool, weight loss, etc., and seek medical attention at a gastroenterology clinic.
+2. 門診諮詢和檢查 (Clinic Consultation and Examination)
+中文： 醫師會詢問病患的病史、家族史和生活習慣，並進行身體檢查，例如腹部觸診。 醫師可能會安排糞便潛血檢查或血液檢查。
+英文： The doctor will inquire about the patient's medical history, family history, and lifestyle habits, and conduct a physical examination, such as abdominal palpation. The doctor may order a fecal occult blood test or blood tests.
+3. 大腸鏡檢查 (Colonoscopy)
+中文： 醫師會安排大腸鏡檢查，以直接觀察大腸內部，並進行診斷。 檢查前，病患需要遵循特定的飲食和清腸準備。
+英文： The doctor will schedule a colonoscopy to directly visualize the inside of the colon and make a diagnosis. The patient needs to follow specific dietary and bowel preparation instructions before the examination.
+4. 息肉切除 (Polyp Removal)
+中文： 如果在大腸鏡檢查中發現息肉，醫師通常會直接切除，並送病理化驗。
+英文： If polyps are found during the colonoscopy, the doctor will usually remove them directly and send them for pathological examination.
+5. 病理報告和後續治療 (Pathology Report and Follow-up Treatment)
+中文： 根據病理報告結果，醫師會決定後續的治療方案，例如定期追蹤、手術切除或其他治療。
+英文： Based on the pathology report, the doctor will determine the follow-up treatment plan, such as regular follow-up, surgical resection, or other treatments.
+6. 家庭護理 (Home Care)
+中文： 醫師會提供居家照護指示，例如飲食建議、傷口護理、藥物使用、活動限制和後續追蹤等。
+英文： The doctor will provide home care instructions, such as dietary recommendations, wound care, medication use, activity restrictions, and follow-up appointments.
+7. 定期追蹤 (Regular Follow-up)
+中文： 病患需要定期回診追蹤，以監測病情和預防復發。
+英文： The patient needs to schedule regular follow-up appointments to monitor their condition and prevent recurrence.
+8. 長期健康管理 (Long-term Health Management)
+中文： 醫師會指導病患進行長期健康管理，例如維持健康的飲食和生活習慣、定期篩檢等，以降低大腸癌復發的風險。
+英文： The doctor will guide the patient in long-term health management, such as maintaining healthy dietary and lifestyle habits and undergoing regular screening, to reduce the risk of colorectal cancer recurrence.
+治療成功的重要事項 (more important )
+病患教育 (Patient education): 醫師應向病患詳細解釋病情、治療方案和預後，並解答病患的疑問。
+心理支持 (Psychological support): 提供病患心理支持，協助他們應對疾病带来的壓力和焦慮。
+家庭參與 (Family involvement): 鼓勵家屬參與病患的照護，提供支持和協助。
+在healthcare人力缺乏下，我們希望可以用AI agent chatbot 來幫助醫師提供病患一個品質好的patient journal
+
+消化內科醫師通常會遵循一些通用的治療和居家自我照護醫囑，並根據病患的具體情況進行調整。
+以下是一些常見的系統性治療和居家自我照護醫囑，以及一些可以在等待領藥時和回家後再次確認的問題，以增進預後照顧成功率：
+一、 系統性治療及居家自我照護醫囑 (Systematic Instructions)
+1. 術後觀察 (Post-procedure observation)
+恢復室觀察： 
+You will be monitored in the recovery room for a period of time after the procedure to ensure that you are recovering well. (術後您會在恢復室觀察一段時間，以確保您恢復良好。)
+We will monitor your vital signs, such as your blood pressure, heart rate, and oxygen saturation. (我們會監測您的生命體徵，例如血壓、心率和血氧飽和度。)
+觀察出血和穿孔徵兆： 
+It is normal to have some mild abdominal cramping and bloating after the procedure. (術後出現輕微腹部絞痛和腹脹是正常的。)
+However, if you experience severe abdominal pain, fever, chills, or rectal bleeding, please notify us immediately. (但是，如果您出現嚴重腹痛、發燒、發冷或直腸出血，請立即通知我們。)
+2. 飲食 (Diet)
+逐步恢復飲食： 
+You can start with clear liquids after the procedure, and gradually progress to a regular diet as tolerated. (術後您可以先從清流質開始，然後逐漸過渡到正常飲食。)
+Avoid spicy, greasy, or acidic foods for a few days. (術後幾天內應避免辛辣、油膩或酸性食物。)
+Drink plenty of fluids to stay hydrated. (多喝水以保持水分。)
+3. 活動 (Activity)
+適度休息： 
+Rest for the remainder of the day after the procedure. (術後當天應休息。)
+Avoid strenuous activities for a few days. (術後幾天內應避免劇烈運動。)
+恢復正常活動： 
+You can gradually resume your normal activities as you feel better. (當您感覺好轉時，您可以逐漸恢復正常活動。)
+4. 藥物 (Medications)
+依醫囑服藥： 
+Take any prescribed medications as directed by your doctor. (按照醫生的指示服用任何處方藥。)
+If you were taking any medications that were stopped before the procedure, ask your doctor when you can resume them. (如果您在術前停用了任何藥物，請諮詢您的醫生何時可以恢復服用。)
+止痛藥： 
+You may take over-the-counter pain medication for mild discomfort. (您可以服用非處方止痛藥來緩解輕微不適。)
+If you have more severe pain, please contact your doctor. (如果您有更嚴重的疼痛，請聯繫您的醫生。)
+5. 傷口護理 (Wound care)
+保持傷口不動(don’t move to much)： 
+Ｄont do extreme exercise for one week . (一周請勿激烈運動。)
+You may shower or bathe as usual. (您可以像往常一樣淋浴或洗澡。)
+6. 後續追蹤 (Follow-up)
+預約回診： 
+You will need to schedule a follow-up appointment with your doctor to discuss the results of the biopsy. (您需要安排與您的醫生進行後續預約，以討論活檢結果。)
+If any polyps were removed, you will need to have another colonoscopy in the future to check for recurrence. (如果切除了任何息肉，您將來需要再次進行大腸鏡檢查以檢查是否復發。)
+二、 等待領藥時確認的問題 (Questions to Confirm While Waiting for Medication)
+了解醫囑： 
+Do you understand the instructions for taking your medications? (您是否了解服用藥物的指示？)
+Do you have any questions about your medications? (您對您的藥物有任何疑問嗎？)
+飲食和活動： 
+Do you understand the instructions for your diet and activity level? (您是否了解飲食和活動水平的指示？)
+後續追蹤： 
+Do you have any questions about your follow-up appointment? (您對您的後續預約有任何疑問嗎？)
+三、 回家後提醒注意事項 (Reminders After Returning Home)
+您可以透過電話或簡訊提醒病患以下事項：
+觀察出血： 
+Please monitor for any signs of rectal bleeding, such as blood in your stool or on the toilet paper. (請注意是否有直腸出血的跡象，例如糞便或衛生紙上的血液。)
+觀察感染： 
+Please monitor for any signs of infection, such as fever, chills, or increasing abdominal pain. (請注意是否有感染的跡象，例如發燒、發冷或腹痛加劇。)
+按時服藥： 
+Please remember to take your medications as prescribed. (請記住按照處方服用您的藥物。)
+回診： 
+Please remember to schedule and attend your follow-up appointment. (請記住安排並參加您的後續預約。)
+四、 注意事項 (Important Notes)
+病人安全： 確保病患了解所有術後指示和注意事項，以確保安全。
+個別化照護： 根據病患的具體情況，調整治療和居家自我照護醫囑。
+持續追蹤： 定期追蹤病患的恢復情況，並解答病患的疑問。
+
+糖尿病的控制需均衡健康飲食、適當運動、藥物、監測三餐配對血糖(當餐餐前與餐後2小時血糖)和生活調整來控制。若飲食不均衡、大小餐、自行減藥或停藥，一定會引起高低血糖風險。除非有特殊狀況，一定要跟您的就診醫療團隊 (醫師、衛教師、營養師)討論，例如糖尿病患者在門診排程的胃、腸鏡檢查，需暫時停用降糖藥物或注射胰島素。這期間如何預防高低血糖應注意的事項如下:
+
+1.    使用口服抗糖尿病藥物，如磺醯脲素類(sulfonylurea):作用機轉屬於促胰島素分泌劑，非磺醯脲素類美格替耐類(Meglitinide):作用機轉屬於快速促胰島素分泌劑，單獨使用時飲食不均衡或未進食使用有低血糖發生的風險。而雙胍類(Biguanide)、葡萄糖苷酶抑製劑(α-glucosidase inhibitor)、SGLT2鈉-葡萄糖轉運蛋白二抑制劑，這些藥物單獨使用時則不增加低血糖發生的風險，但合併胰島素或磺醯脲素類藥物時，會增加低血糖發生風險。因此，建議在檢查當天，暫時停用口服抗糖尿病藥，正常飲食之後，再恢復原來藥物治療。
+
+2.    非胰島素注射劑的患者（例如GLP-1類升糖素肽受體激動劑-易週糖、胰妥善、胰妥讚），這些藥物單獨使用時則不增加低血糖發生的風險，但合併胰島素或磺醯脲素類藥物時，會增加低血糖發生風險。建議在檢查當天，暫時停止注射非胰島素注射劑，正常飲食之後，再恢復原來當天注射藥物治療。
+
+3.    使用胰島素治療:若因禁食暫停口服抗糖尿病藥物或胰島素，檢查完成，恢復用餐時依原來醫囑注射。
+
+4.    大腸鏡檢查前的禁食時間，例如
+（1）如排早上9點檢查，檢查前一晚上7點服用瀉藥，可將晚飯安排在 6 點，可進食白飯、清粥、白麵條、去邊白吐司、白饅頭等，蒸蛋、碎魚肉、嫩豆腐及纖維含量少的胡瓜、白蘿蔔、絲瓜去籽等瓜類蔬菜的低渣飲食，仍可注射餐時胰島素或口服抗糖尿病藥物。檢查當日早上4點開始服用瀉藥，當天應禁食，需要停用胰島素或口服抗糖尿病藥物。
+（2）如排下午2點檢查腸鏡，檢查前一晚上7點服用瀉藥，也可將晚飯安排在6點，進食低渣飲食，仍可使用餐時胰島素或口服藥。檢查當日應禁食，早上9點開始服用瀉藥，也需要停用胰島素或口服抗糖尿病藥物。
+
+5.    接受無痛胃鏡腸鏡檢查的糖尿病患者，預防措施包括對確定有低血糖風險及時監測血糖，經醫院許可後由親友陪同離院。患者須自備治療低血糖的液體包括含糖飲料，或含糖果汁、無色水果糖等。因全麻後短時間內澱粉或蛋白類食物進食受限，應每15-30分鐘監測血糖1次，血糖恢復後至少監測觀察血糖24～48小時。
+
+　　糖友安心準備胃、腸鏡檢查，諮詢您的醫療團隊，減少恐懼，提早診療。若有服用Aspirin阿斯匹靈、Warfarin可邁丁、保栓通clopidgrel等抗凝藥物的患者，是否需事先停藥1週才能病理切片檢查，請您與醫師討論。其他共病藥物如高血脂、高血壓藥..等檢查完正常飲食之後，再恢復原來藥物治療。祝福所有糖友檢查順利。
+
+⼤腸鏡檢查前後注意事項
+列印⽇期 : 2025/02/19
+護理指導 / ⽬錄總覽 / ⼤腸直腸外科
+最近修訂: 2023-03-27
+【本篇學習重點】
+1.⼤腸鏡檢查檢查前⼀天採⽤清流無渣飲食。
+2.做無痛性⼤腸鏡當天，檢查前需禁食⾄少四⼩時。
+3.檢查後會有輕微腹脹、腹部不適，可藉由多活動以利排氣。
+⼀、什麼是⼤腸鏡檢查？
+由肛⾨放置⼀軟性纖維內視鏡直接觀察⼤腸與直腸黏膜，並將檢查過程中所發現腫瘤病變組織
+或息⾁，做切除或切片檢查，同時達到診斷及治療的⽬的。
+⼆、檢查前的準備：
+1. 需填妥檢查治療同意書。
+2. 檢查前⼆天進食低纖維飲食，如：⽩吐司、稀飯、⽩麵條、冬粉、細碎⾁鬆或碎⾁等，避
+免吃含梗蔬菜(花椰菜、空⼼菜、芹菜)、含籽⽔果(芭樂、奇異果、火龍果)、五穀堅果類、
+乳製品(⽜奶、⽺奶、奶酪、優酪乳)。
+3. 檢查前⼀天進食清流無渣飲食，如：運動飲料、米湯、雞精、清湯、茶、蜂蜜⽔、無渣果
+汁(蘋果汁、冬瓜茶)等；不可以喝⾖漿、⽜奶、安素等含纖維的食物。
+4. 檢查前⼀天中午以後依醫師指⽰開始服⽤瀉劑，需搭配喝⽔2000CC以上。
+5. 若飲⽤瀉劑後⼤便仍未完全解乾淨，需再依醫師指⽰服⽤⼝服瀉藥，有良好的腸道清潔，
+才能使⼤腸鏡檢查更準確。
+6. 檢查當⽇⼀般腸鏡仍可進食清流無渣飲食，做無痛性⼤腸鏡者需禁食⾄少四⼩時。(延伸
+閱讀：無痛性⼤腸鏡檢查前後注意事項)
+7. 若平⽇服⽤降⾎壓及⼼臟⽤藥可繼續服⽤，但糖尿病病⼈，降⾎糖藥物於檢查當⽇須暫停
+服⽤，待檢查完成可進食後再服⽤降⾎糖藥。
+三、檢查過程說明：
+1. 檢查時⾝體⾯向左側、膝蓋彎向肚⼦呈蝦米狀姿勢。
+2. 內視鏡置入肛⾨後，會打入少量空氣以協助醫師定位腸腔。
+3. 當內視鏡到達⼄狀結腸處時，會協助將姿勢改變成仰躺姿勢以利內視鏡通過右側結腸彎曲
+處。
+4. 此項檢查不需⿇醉，若病⼈較為緊張或因腸道沾粘、腸道過度彎曲及檢查困難者，可⾃費
+注射鎮靜劑及⽌痛劑以減少不適程度，此時需有家屬陪同。
+5. 檢查過程中若有任何不舒適，請主動表達給在場醫檢⼈員知道。
+四、檢查後照護原則：
+1. 檢查後會為您監測⾎壓、脈搏、呼吸及體溫變化。
+2. 檢查後會有輕微腹脹、腹部不適情形，可藉由翻⾝及多活動以利排氣，減輕腹脹不適。若
+嚴重腹痛或出⾎請立即通知醫護⼈員。
+3. 當⽇檢查後可恢復正常飲食，若同時做切片檢查或息⾁切除術者，當⽇依醫囑進食低纖維
+或清流無渣的食物，隔⽇再逐漸增加纖維含量之食物，避免吃油炸及辛辣食物，以避免刺
+激腸道導致切片傷⼝發炎或出⾎情形。
+4. 若做無痛性⼤腸鏡或檢查過程有注射鎮靜劑及⽌痛劑者，建議當⽇檢查後不要開⾞。
+
+網站導覽 意反映 交通訊息 受檢者專區 中 En
+Examination Items and Pricing
+檢查⽬的：無痛腸胃鏡檢查可以讓您在舒適的情況下，檢查食道、胃、⼗⼆指腸與全⼤腸的健康狀態，在檢查過程中，若有發現病灶或是息⾁，可同步進⾏醫療處置，以有效降低消化
+道癌症之發⽣。
+檢查主要包含：內視鏡檢查無痛⿇醉、上消化道泛內視鏡檢查、⼤腸鏡檢查。
+不建議進⾏內視鏡檢查之時機
+若您有下列情形，為維護您檢查之安全性，建議您暫時不接受內視鏡檢查，待您病況穩定或經診療醫師評估後，再另⾏安排。
+1. 三個⽉內接受重⼤⼿術者。
+2. 六個⽉內接受腹部⼿術者。
+3. 疑似懷孕者，或懷孕期間者。
+4. 無法配合左側躺者（因檢查需要，須維持左側躺約20-30分鐘）。
+5. 罹患有下列⼼肺疾病者
+(1) 三個⽉內，有發⽣⼼絞痛、胸痛、胸悶或急性⼼肌梗塞。
+(2) ⼀年內曾接受⼼臟導管治療或繞道⼿術。
+(3) ⼼電圖呈現急性⼼肌梗塞或其他重⼤異常之不穩定狀態。
+(4) ⾎壓⼤於180/100 mmHg。
+(5) 有劇烈咳嗽、正值氣喘發作期間或肺功能不佳者。
+6. 非醫療必要，⼤於85歲以上之長者。
+7. 不適合停⽤抗凝⾎劑者。
+8. 有藥物或酒精成癮、意識不清無法配合者或牙⿒晃動者。
+9. 其他重⼤系統性疾病，例如：未矯治的凝⾎功能異常者，半年內有肺栓塞或腦⾎管梗塞者（若您罹患有重⼤疾病，請您事先告知）。
+若您不確定您的病史是否適合接受內視鏡檢查，請與我們聯繫。另為維護檢查之安全性，減少不必要之風險產⽣，本中⼼醫療⼈員保有提供腸胃鏡檢查之權利。
+腸胃鏡檢查與低渣飲食
+根據最新衛⽣署統計，癌症是國⼈⼗⼤死亡原因之⾸位，其中⼤腸直腸癌更是名列前茅，內視鏡檢查是早期發現這些腫瘤的利器。⼤腸癌的前癌病變，即是指「⼤腸腺瘤」或是所謂的「腺瘤
+性⼤腸息⾁」，⼤腸息⾁在5到10年後，部分可能演變成⼤腸癌。⼤腸鏡除可以診斷⼤腸直腸癌以外，檢查中切除所發現之腺瘤性息⾁可降低⼤腸癌的風險達80%，⼤腸癌檢查之前的清腸準備
+良窳直接影響⼤腸腫瘤的偵測度，不適當的清腸準備影響檢查及診斷甚鉅，我們希望您能配合下列注意事項。
+腸胃鏡檢查飲食準備⽅式
+⼀. 什麼是低渣飲食
+低渣飲食是減少食物經消化後在腸胃道留下殘渣的⼀種飲食，在腸胃鏡檢查之前使⽤低渣飲食，將可以使清腸藥的效果⼤增，以避免病灶因為糞便覆蓋⽽無法仔細觀察，同時也會讓腸鏡的檢
+查過程更為順利。
+⼆. 食物的選擇
+請於腸胃鏡檢查的前三天，食物即應開始以清淡為主，避免⾼纖維含量的蔬菜及⽔果（可飲⽤過濾後的蔬果汁），避免刺激性的食物（油炸、油煎）、⽜奶及奶類製品。請儘量採⽤可以使食物
+質軟的烹調⽅式。選擇去⽪、去筋的嫩⾁、精緻五穀類或加⼯精緻的⾖類製品，海鮮類（如⿂⾁）食品。
+低渣飲食－食物選擇表
+健檢套裝介紹
+胃腸鏡套裝
+請各位受檢者充分了解，儘管篩檢可以有效早期診斷疾病，並進⽽降低疾病對健康之威脅。然任何健檢項⽬與醫療儀器檢查，對於各類疾病之敏感
+度均非百分之百，加上受檢者個⼈特性與健康狀況之多樣性，故無法百分之百的診斷所有疾病。
+此外在健康檢查之後，也請您遵從建議進⾏追蹤或治療，並調整⽇常⽣活習慣、避免危害健康因⼦，以落實健康管理與預防醫學的精神。
+檢查項⽬⼀覽表 精緻
+上消化道泛內視鏡檢查 V
+⼤腸鏡檢查 V
+無痛⿇醉 V
+健康檢查報告彙整與諮詢 V
+套裝費⽤ 13,700 元
+可
+建議菜單（每⽇粗纖維攝取量在4公克以下）
+腸鏡檢查清腸⽅式
+腸道清潔程度對照表
+最後⼀次解便⾺桶圖
+腸道對照圖
+注意事項
+1. 如果您希望腸胃鏡檢查發現病灶時進⾏切片檢查或施⾏息⾁切除術，但⽬前⼜服⽤抗凝⾎劑時，務必請您與⾨診的醫師討論暫停藥物事宜，並主動告知。
+2. 若當⽇檢查發現病灶需處理，醫師會依實際情況，決定當⽇是否切除。
+3. 當天可能接受息⾁切片、切除，⼀週內請勿安排出國⾏程。
+4. 本中⼼已全⾯採⽤拋棄式器械，若因檢查或處置⽽使⽤之耗材費⽤需另計。
+5. 若您預定接受無痛內視鏡檢查，為了您的安全，健檢當⽇請勿開⾞。
+6. 清腸藥的使⽤時間影響腸胃道清潔程度甚鉅，若您無特殊狀況，強烈建議您當⽇清晨喝藥。
+忌
+腸鏡檢查前三天
+腸鏡檢查前兩天
+腸鏡檢查前天
+檢查當清晨清腸（強烈建議此法）
+檢查前晚清腸（無法配合當清晨服藥時）
+佳 不佳 不佳
+解出黃⾊清澈液體 解出清澈液體糞便 仍有鬆散糞便或成型糞便
+7. 請去除⼿部指甲油，勿做光療。
+喝藥時間對清腸準備程度影響有多少？
+（本中⼼2008年8⽉⾄2009年7⽉健檢⼈次共6270⼈統計結果）
+說明：腸鏡檢查選擇當天清腸的顧客發現⼩於1公分之⾼風險腺瘤（含腺瘤）偵測率為0.008，較前晚清腸顧客之偵測率0.003⾼。
+瀏覽⼈次：129307
+清腸狀況 / 喝藥時間 當天清腸（3,040⼈） 前晚清腸（3,230⼈）
+良好 ⼈數（%） 2,739⼈（90.1%） 794⼈（24.6%）
+不良 ⼈數（%） 301⼈（9.9%） 2,436⼈（75.4%）
+台醫院健康管理中 © All Rights Reserved.
+最新消息 認識我們 健康檢查
+線上預約 常問題 健康新知
+影專區
+台北市中南路7號(東址研究樓六樓)
+02-2356-2916~8
+02-2341-2775
+hmc@ntuh.gov.tw
+地址
+電話
+傳真
+信箱 瀏覽次：4702664 維護期：2025-02-19 更新期：2025-02-19
+醫療機構網際網路資訊管理辦法聲明：禁任何網際網路服務業者轉錄本網路資訊之內容供點閱。
+但以網路搜尋或超連結式，進本醫療機構之網址（域）直接點閱者，不在此限。
+聲明
