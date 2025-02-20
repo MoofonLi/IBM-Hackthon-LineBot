@@ -164,7 +164,7 @@ class WatsonX:
             "input": prompt,
             "parameters": {
                 "decoding_method": "greedy",
-                "max_new_tokens": 500,
+                "max_new_tokens": 1000,
                 "min_new_tokens": 0,
                 "repetition_penalty": 1
             },

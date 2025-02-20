@@ -7,7 +7,7 @@ POSTOP_CARE_PROMPT = """<|start_of_role|>system<|end_of_role|>
 <|start_of_role|>assistant<|end_of_role|>"""
 
 # 問診狀態的prompt
-CONSULTATION_PROMPT = """<|start_of_role|>system<|end_of_role|>
+QUESTIONNAIRE_PROMPT = """<|start_of_role|>system<|end_of_role|>
 您是一位醫療諮詢助理。您必須系統性地收集病患資訊並給予建議，並用聊天的方式帶入問診，並且一句一句做輸出（非常重要），像是在聊天，讓病人不會感到無聊，語言只能是繁體中文或英文
 
 

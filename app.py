@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict
 from watsonx import WatsonX, Document
-from prompts import POSTOP_CARE_PROMPT, CONSULTATION_PROMPT, GENERAL_QUERY_PROMPT
+from prompts import POSTOP_CARE_PROMPT, QUESTIONNAIRE_PROMPT, GENERAL_QUERY_PROMPT
 
 # 載入環境變數
 load_dotenv()
@@ -37,8 +37,8 @@ line_handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 user_sessions: Dict[str, Dict] = {}
 
 # 指令常數 - 不轉換為小寫，保持原始格式
-CONSULTATION_START_COMMANDS = ["start consultation", "開始問診", "start consultation（開始問診）", "Start Consultation（開始問診）"]
-CONSULTATION_END_COMMANDS = ["end consultation", "結束問診", "end consultation（結束問診）", "End Consultation（結束問診）"]
+QUESTIONNAIRE_START_COMMANDS = ["start questionnaire", "開始問診", "start questionnaire（開始問診）", "Questionnaire of Health (健康情況問卷)"]
+QUESTIONNAIRE_END_COMMANDS = ["end questionnaire", "結束問診", "end questionnaire（結束問診）", "End Questionnaire（結束問診）"]
 POSTOP_START_COMMANDS = ["postoperative care", "術後照護", "postoperative care（術後照護）", "Postoperative Care（術後照護）"]
 POSTOP_END_COMMANDS = ["end care", "結束照護", "end care（結束照護）", "End Care（結束照護）"]
 
@@ -47,21 +47,21 @@ def get_or_create_session(user_id: str) -> Dict:
     if user_id not in user_sessions:
         user_sessions[user_id] = {
             "state": "free_chat",
-            "consultation_data": [],
+            "questionnaire_data": [],
             "postop_data": [],
             "timestamp": datetime.now()
         }
     return user_sessions[user_id]
 
-def generate_consultation_form(consultation_data: list) -> str:
+def generate_questionnaire_form(questionnaire_data: list) -> str:
     """生成問診表單"""
-    if not consultation_data:
-        return "No consultation records.\n\n\n無問診紀錄。"
+    if not questionnaire_data:
+        return "No questionnaire records.\n\n\n無問診紀錄。"
     
-    form = "===== Consultation Record =====\n"
+    form = "===== Questionnaire Record =====\n"
     form += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
     form += "Content:\n"
-    for idx, entry in enumerate(consultation_data, 1):
+    for idx, entry in enumerate(questionnaire_data, 1):
         form += f"{idx}. Patient: {entry.get('patient', '')}\n"
         if entry.get('response'):
             form += f"   Response: {entry['response']}\n"
@@ -70,7 +70,7 @@ def generate_consultation_form(consultation_data: list) -> str:
     form += "========= 問診紀錄表 =========\n"
     form += f"時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
     form += "內容：\n"
-    for idx, entry in enumerate(consultation_data, 1):
+    for idx, entry in enumerate(questionnaire_data, 1):
         form += f"{idx}. 病患：{entry.get('patient', '')}\n"
         if entry.get('response'):
             form += f"   回應：{entry['response']}\n"
@@ -83,7 +83,7 @@ def handle_free_chat(message: str) -> str:
     return (
         f"Received your message: {message}\n"
         "Available commands:\n"
-        "- Start Consultation\n"
+        "- Start Questionnaire\n"
         "- Postoperative Care\n\n\n"
         f"收到您的訊息：{message}\n"
         "可用指令：\n"
@@ -91,13 +91,13 @@ def handle_free_chat(message: str) -> str:
         "- 術後照護"
     )
 
-def create_end_consultation_buttons():
+def create_end_questionnaire_buttons():
     """建立結束問診的快速回覆按鈕"""
     return QuickReply(items=[
         QuickReplyItem(
             action=MessageAction(
                 label="End（結束）",
-                text="End Consultation（結束問診）"
+                text="End Questionnaire（結束問診）"
             )
         )
     ])
@@ -116,7 +116,7 @@ def create_end_postop_buttons():
 def load_documents():
     docs = {}
     try:
-        for filename in ['consultation.txt', 'general.txt', 'postop.txt']:
+        for filename in ['questionnaire.txt', 'general.txt', 'postop.txt']:
             file_path = os.path.join('docs', filename)
             
             # Check if file exists
@@ -177,18 +177,18 @@ def handle_message(event):
                 quick_reply=create_end_postop_buttons()
             )
             
-        elif received_message in CONSULTATION_START_COMMANDS:
-            session["state"] = "consultation"
+        elif received_message in QUESTIONNAIRE_START_COMMANDS:
+            session["state"] = "questionnaire"
             message = TextMessage(
                 text="開始問診。請描述您的症狀。",
-                quick_reply=create_end_consultation_buttons()
+                quick_reply=create_end_questionnaire_buttons()
             )
             
         # 再檢查是否為結束指令
-        elif received_message in CONSULTATION_END_COMMANDS and session["state"] == "consultation":
-            form = generate_consultation_form(session["consultation_data"])
+        elif received_message in QUESTIONNAIRE_END_COMMANDS and session["state"] == "questionnaire":
+            form = generate_questionnaire_form(session["questionnaire_data"])
             session["state"] = "free_chat"
-            session["consultation_data"] = []
+            session["questionnaire_data"] = []
             message = TextMessage(text=f"問診已結束。已生成記錄表：\n{form}")
             
         elif received_message in POSTOP_END_COMMANDS and session["state"] == "postop_care":
@@ -209,26 +209,26 @@ def handle_message(event):
                 quick_reply=create_end_postop_buttons()
             )
             
-        elif session["state"] == "consultation":
+        elif session["state"] == "questionnaire":
             context = watsonx.find_relevant_context(received_message)
             response = watsonx.generate_response(
                 context=context,
                 user_input=received_message,
-                prompt_template=CONSULTATION_PROMPT
+                prompt_template=QUESTIONNAIRE_PROMPT
             )
-            session["consultation_data"].append({
+            session["questionnaire_data"].append({
                 "patient": received_message,
                 "response": response,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
             message = TextMessage(
                 text=response,
-                quick_reply=create_end_consultation_buttons()
+                quick_reply=create_end_questionnaire_buttons()
             )
             
         else:  # free_chat 狀態
             # 檢查是否為命令文字，如果不是則使用一般回應
-            if received_message in POSTOP_START_COMMANDS or received_message in CONSULTATION_START_COMMANDS:
+            if received_message in POSTOP_START_COMMANDS or received_message in QUESTIONNAIRE_START_COMMANDS:
                 context = watsonx.find_relevant_context(received_message)
                 response = watsonx.generate_response(
                     context=context,
