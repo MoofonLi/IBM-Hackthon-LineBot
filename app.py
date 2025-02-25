@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 from typing import Dict
 from watsonx import WatsonX, Document
-from prompts import POSTOP_CARE_PROMPT, QUESTIONNAIRE_PROMPT, GENERAL_QUERY_PROMPT
+from prompts import POSTOP_CARE_PROMPT, QUESTIONNAIRE_PROMPT, GENERAL_QUERY_PROMPT, ORGANIZATION_PROMPT
 
 # 載入環境變數
 load_dotenv()
@@ -49,47 +49,28 @@ def get_or_create_session(user_id: str) -> Dict:
             "state": "free_chat",
             "questionnaire_data": [],
             "postop_data": [],
-            "timestamp": datetime.now()
+            "timestamp": datetime.now(),
+            "conversation_history": [],  # 一般對話歷史
+            "questionnaire_history": [], # 問診對話歷史
+            "postop_history": [],        # 術後照護對話歷史
+            "current_context": ""
         }
     return user_sessions[user_id]
 
 def generate_questionnaire_form(questionnaire_data: list) -> str:
-    """生成問診表單"""
+    """生成問卷表單"""
     if not questionnaire_data:
-        return "No questionnaire records.\n\n\n無問診紀錄。"
+        return "No questionnaire records.\n\n\n無問卷紀錄。"
     
-    form = "===== Questionnaire Record =====\n"
-    form += f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-    form += "Content:\n"
-    for idx, entry in enumerate(questionnaire_data, 1):
-        form += f"{idx}. Patient: {entry.get('patient', '')}\n"
-        if entry.get('response'):
-            form += f"   Response: {entry['response']}\n"
-    form += "============================\n\n\n"
-    
-    form += "========= 問診紀錄表 =========\n"
-    form += f"時間：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+    form = "========= 問卷紀錄表 =========\n"  # Initialize form here
     form += "內容：\n"
     for idx, entry in enumerate(questionnaire_data, 1):
         form += f"{idx}. 病患：{entry.get('patient', '')}\n"
         if entry.get('response'):
             form += f"   回應：{entry['response']}\n"
     form += "============================"
-    return form
 
-def handle_free_chat(message: str) -> str:
-    """處理自由對話"""
-    # Watson 整合的預留位置
-    return (
-        f"Received your message: {message}\n"
-        "Available commands:\n"
-        "- Start Questionnaire\n"
-        "- Postoperative Care\n\n\n"
-        f"收到您的訊息：{message}\n"
-        "可用指令：\n"
-        "- 開始問診\n"
-        "- 術後照護"
-    )
+    return form
 
 def create_end_questionnaire_buttons():
     """建立結束問診的快速回覆按鈕"""
@@ -97,7 +78,7 @@ def create_end_questionnaire_buttons():
         QuickReplyItem(
             action=MessageAction(
                 label="End（結束）",
-                text="End Questionnaire（結束問診）"
+                text="End Questionnaire（結束問卷）"
             )
         )
     ])
@@ -114,12 +95,12 @@ def create_end_postop_buttons():
     ])
 
 def load_documents():
-    docs = {}
+    docs = []
     try:
         for filename in ['questionnaire.txt', 'general.txt', 'postop.txt']:
             file_path = os.path.join('docs', filename)
+            print(f"Attempting to load: {file_path}")
             
-            # Check if file exists
             if not os.path.exists(file_path):
                 print(f"Warning: File {filename} not found")
                 continue
@@ -127,16 +108,24 @@ def load_documents():
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     content = f.read()
+
                     if content.strip():
-                        docs[filename] = Document(content=content, metadata={'source': filename})
-                        watsonx.process_document(content)
-                    else:
-                        print(f"Warning: Empty content in {filename}")
-            except UnicodeDecodeError:
-                print(f"Error: Unable to decode {filename} with UTF-8 encoding")
+                        doc = Document(
+                            content=content,
+                            metadata={'source': filename}
+                        )
+                        docs.append(doc)
+                        print(f"Successfully loaded {filename}")
             except Exception as e:
                 print(f"Error processing {filename}: {str(e)}")
                 
+        # Process documents and create index
+        if docs:
+            num_chunks = watsonx.process_documents(docs)
+
+        else:
+            print("No documents were loaded")
+            
     except Exception as e:
         print(f"Error in load_documents: {str(e)}")
         
@@ -169,75 +158,118 @@ def handle_message(event):
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         
-        # 首先檢查是否為開始命令
+        # 處理開始命令
         if received_message in POSTOP_START_COMMANDS:
             session["state"] = "postop_care"
+            session["postop_history"] = []  # 清空術後照護歷史
             message = TextMessage(
-                text="開始術後照護對話。請描述您的狀況或提出問題。",
+                text="您好，請問有發生任何狀況或有想問的問題嗎",
                 quick_reply=create_end_postop_buttons()
             )
             
         elif received_message in QUESTIONNAIRE_START_COMMANDS:
             session["state"] = "questionnaire"
+            session["questionnaire_history"] = []  # 清空問診歷史
             message = TextMessage(
-                text="開始問診。請描述您的症狀。",
+                text="您好，可以先告訴我你的基本資料嗎",
                 quick_reply=create_end_questionnaire_buttons()
             )
             
-        # 再檢查是否為結束指令
+        # 處理結束命令
         elif received_message in QUESTIONNAIRE_END_COMMANDS and session["state"] == "questionnaire":
-            form = generate_questionnaire_form(session["questionnaire_data"])
+            form_response = generate_questionnaire_form(session["questionnaire_data"])
             session["state"] = "free_chat"
             session["questionnaire_data"] = []
-            message = TextMessage(text=f"問診已結束。已生成記錄表：\n{form}")
+            session["questionnaire_history"] = []  # 清空問診歷史
+            message = TextMessage(text=f"問診已結束。已生成記錄表：\n{form_response}")
             
         elif received_message in POSTOP_END_COMMANDS and session["state"] == "postop_care":
             session["state"] = "free_chat"
             session["postop_data"] = []
+            session["postop_history"] = []  # 清空術後照護歷史
             message = TextMessage(text="術後照護對話已結束。")
             
-        # 最後根據當前狀態處理一般對話
+        # 處理各狀態的對話
         elif session["state"] == "postop_care":
+            # 保存使用者訊息
+            session["postop_history"].append({
+                "role": "user",
+                "content": received_message
+            })
+            
             context = watsonx.find_relevant_context(received_message)
             response = watsonx.generate_response(
                 context=context,
                 user_input=received_message,
-                prompt_template=POSTOP_CARE_PROMPT
+                prompt_template=POSTOP_CARE_PROMPT,
+                conversation_history=session["postop_history"]
             )
+            
+            # 保存助理回應
+            session["postop_history"].append({
+                "role": "assistant",
+                "content": response
+            })
+            
             message = TextMessage(
                 text=response,
                 quick_reply=create_end_postop_buttons()
             )
             
         elif session["state"] == "questionnaire":
+            # 保存使用者訊息
+            session["questionnaire_history"].append({
+                "role": "user",
+                "content": received_message
+            })
+            
             context = watsonx.find_relevant_context(received_message)
             response = watsonx.generate_response(
                 context=context,
                 user_input=received_message,
-                prompt_template=QUESTIONNAIRE_PROMPT
+                prompt_template=QUESTIONNAIRE_PROMPT,
+                conversation_history=session["questionnaire_history"]
             )
+            
+            # 保存助理回應
+            session["questionnaire_history"].append({
+                "role": "assistant",
+                "content": response
+            })
+            
             session["questionnaire_data"].append({
                 "patient": received_message,
                 "response": response,
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             })
+            
             message = TextMessage(
                 text=response,
                 quick_reply=create_end_questionnaire_buttons()
             )
             
         else:  # free_chat 狀態
-            # 檢查是否為命令文字，如果不是則使用一般回應
-            if received_message in POSTOP_START_COMMANDS or received_message in QUESTIONNAIRE_START_COMMANDS:
-                context = watsonx.find_relevant_context(received_message)
-                response = watsonx.generate_response(
-                    context=context,
-                    user_input=received_message,
-                    prompt_template=GENERAL_QUERY_PROMPT
-                )
-                message = TextMessage(text=response)
-            else:
-                message = TextMessage(text=handle_free_chat(received_message))
+            # 保存使用者訊息
+            session["conversation_history"].append({
+                "role": "user",
+                "content": received_message
+            })
+            
+            context = watsonx.find_relevant_context(received_message)
+            response = watsonx.generate_response(
+                context=context,
+                user_input=received_message,
+                prompt_template=GENERAL_QUERY_PROMPT,
+                conversation_history=session["conversation_history"]
+            )
+            
+            # 保存助理回應
+            session["conversation_history"].append({
+                "role": "assistant",
+                "content": response
+            })
+            
+            message = TextMessage(text=response)
 
         # 發送回應
         line_bot_api.reply_message_with_http_info(
@@ -248,4 +280,4 @@ def handle_message(event):
         )
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000, debug=True)

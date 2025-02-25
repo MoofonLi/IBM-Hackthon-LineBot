@@ -47,28 +47,46 @@ class WatsonX:
         self.chunks = []
         self.chunk_size = 300
         self.chunk_overlap = 30
-        
-    def process_document(self, content: str, metadata: Dict[str, Any] = None):
-        """處理文檔並建立向量索引"""
-        # 分批處理文檔
-        self.chunks = self._create_chunks(content)
-        
-        # 批次生成嵌入向量
-        batch_size = 32
-        embeddings = []
-        for i in range(0, len(self.chunks), batch_size):
-            batch = self.chunks[i:i + batch_size]
-            batch_embeddings = self.embedding_model.encode(batch)
-            embeddings.extend(batch_embeddings)
-        
-        # 初始化 FAISS 索引
-        dimension = len(embeddings[0])
-        self.vector_store = faiss.IndexFlatL2(dimension)
-        
-        # 添加向量到索引
-        self.vector_store.add(np.array(embeddings).astype('float32'))
-        
-        return len(self.chunks)
+        self.documents = []
+    
+    def process_documents(self, documents: List[Document]):
+        """Process multiple documents and create unified index"""
+        try:
+            all_chunks = []
+            
+            # Process each document
+            for doc in documents:
+                #print(f"Processing document: {doc.metadata.get('source', 'unnamed')}")
+                chunks = self._create_chunks(doc.content)
+                #print(f"Created {len(chunks)} chunks")
+                
+                # Add source document info to each chunk
+                for chunk in chunks:
+                    all_chunks.append({
+                        'content': chunk,
+                        'metadata': doc.metadata
+                    })
+                
+            self.chunks = all_chunks
+            #print(f"Total chunks created: {len(all_chunks)}")
+            
+            # Generate embeddings for all chunks
+            chunk_texts = [chunk['content'] for chunk in all_chunks]
+            #print("Generating embeddings...")
+            embeddings = self.embedding_model.encode(chunk_texts)
+            #print(f"Generated {len(embeddings)} embeddings")
+            
+            # Create FAISS index
+            dimension = len(embeddings[0])
+            self.vector_store = faiss.IndexFlatL2(dimension)
+            self.vector_store.add(np.array(embeddings).astype('float32'))
+            print(f"Created FAISS index with dimension {dimension}")
+            
+            return len(all_chunks)
+            
+        except Exception as e:
+            print(f"Error in process_documents: {str(e)}")
+            return 0
     
     def _create_chunks(self, text: str) -> List[str]:
         """Smart document chunking with comprehensive error handling"""
@@ -130,34 +148,59 @@ class WatsonX:
             return []
 
     def find_relevant_context(self, query: str, top_k: int = 3) -> str:
-        """基於語義相似度搜索相關上下文"""
+        """基於使用者查詢搜尋相關文件內容"""
         if not self.vector_store or not self.chunks:
+            print("Warning: Vector store or chunks not initialized")  # Debug log
             return ""
-            
+                
         try:
-            # 生成查詢向量
-            query_vector = self.embedding_model.encode([query])
+            print(f"\nSearching for context related to: {query}")  # Debug log
             
-            # 執行向量搜索
+            # Generate query vector
+            query_vector = self.embedding_model.encode([query])
+                
+            # Search for most relevant document chunks
             distances, indices = self.vector_store.search(
                 np.array(query_vector).astype('float32'), 
                 top_k
             )
             
-            # 獲取最相關的文本片段
-            relevant_chunks = [self.chunks[i] for i in indices[0]]
-            
-            return '\n\n'.join(relevant_chunks)
-            
+            print(f"Found {len(indices[0])} relevant chunks")  # Debug log
+                
+            # Get relevant document content with source info
+            relevant_chunks = []
+            for i, idx in enumerate(indices[0]):
+                chunk = self.chunks[idx]
+                source = chunk['metadata'].get('source', 'unknown')
+                content = chunk['content']
+                similarity = 1 / (1 + distances[0][i])  # Convert distance to similarity score
+                # print(f"\nChunk {i+1} (similarity: {similarity:.2f}):")  # Debug log
+                # print(f"Source: {source}")
+                # print(f"Content: {content[:100]}...")  # Print first 100 chars
+                relevant_chunks.append(f"來源: {source}\n相關度: {similarity:.2f}\n內容: {content}")
+                
+            return '\n\n---\n\n'.join(relevant_chunks)
+                
         except Exception as e:
-            print(f"搜索錯誤: {str(e)}")
+            print(f"Error in find_relevant_context: {str(e)}")
             return ""
 
-    def generate_response(self, context: str, user_input: str, prompt_template: str) -> Optional[str]:
+    def generate_response(self, context: str, user_input: str, prompt_template: str, conversation_history: List[Dict] = None) -> Optional[str]:
         """使用指定的prompt模板生成回應"""
+        # 組合歷史對話成文本
+        history_text = ""
+        if conversation_history:
+            for msg in conversation_history:
+                if msg["role"] == "user":
+                    history_text += f"使用者: {msg['content']}\n"
+                else:
+                    history_text += f"助理: {msg['content']}\n"
+        
+        # 將歷史對話加入prompt
         prompt = prompt_template.format(
             context=context,
-            user_input=user_input
+            user_input=user_input,
+            conversation_history=history_text
         )
 
         payload = {
@@ -188,3 +231,4 @@ class WatsonX:
         except requests.exceptions.RequestException as e:
             print(f"API 請求失敗: {str(e)}")
             return None
+        
