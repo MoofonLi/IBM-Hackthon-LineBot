@@ -1,234 +1,225 @@
-import requests
-from typing import Optional, Dict, Any, List
-from sentence_transformers import SentenceTransformer
-import numpy as np
-import faiss
-import re
 from dataclasses import dataclass
-import dotenv
+from typing import Dict, Any, List, Optional
 import os
-
-
-dotenv.load_dotenv()
-
+import requests
+import numpy as np
+from sentence_transformers import SentenceTransformer
+import faiss
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 @dataclass
 class Document:
     content: str
     metadata: Dict[str, Any]
 
+def get_iam_token(apikey: str) -> Optional[str]:
+    """獲取 IBM Cloud IAM 令牌"""
+    url = "https://iam.cloud.ibm.com/identity/token"
+    headers = {"Content-Type": "application/x-www-form-urlencoded"}
+    payload = {
+        "apikey": apikey,
+        "grant_type": "urn:ibm:params:oauth:grant-type:apikey"
+    }
+    
+    try:
+        response = requests.post(url, headers=headers, data=payload)
+        if response.status_code == 200:
+            return response.json().get("access_token")
+        print(f"獲取令牌失敗: {response.status_code}, {response.text[:100]}")
+    except Exception as e:
+        print(f"獲取令牌時出錯: {str(e)}")
+    return None
+
 class WatsonX:
     def __init__(self, api_key: str = None):
         """初始化 WatsonX API 和向量存儲"""
-        # 如果沒有提供API金鑰，使用預設值
-        if api_key is None:
-            api_key = os.getenv("WATSONX_API_TOKEN")
-            
-        # IBM Cloud API 初始化
-        token_response = requests.post(
-            'https://iam.cloud.ibm.com/identity/token',
-            data={
-                "apikey": api_key,
-                "grant_type": 'urn:ibm:params:oauth:grant-type:apikey'
-            }
-        )
-        mltoken = token_response.json()["access_token"]
+        # 基本設置
+        self.api_key = api_key or os.getenv("WATSONX_API_KEY")
+        self.project_id = os.getenv("WATSONX_PROJECT_ID", "your-project-id")
+        self.model_id = os.getenv("WATSONX_MODEL_ID", "meta-llama/llama-3-3-70b-instruct")
+        self.watsonx_url = os.getenv("WATSONX_URL", "https://us-south.ml.cloud.ibm.com")
         
-        self.url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"
+        # 獲取令牌
+        self.iam_token = get_iam_token(self.api_key)
         self.headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {mltoken}"
+            "Authorization": f"Bearer {self.iam_token}"
         }
         
-        # 向量存儲初始化
-        self.embedding_model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-        self.vector_store = None
-        self.chunks = []
-        self.chunk_size = 300
-        self.chunk_overlap = 30
-        self.documents = []
-    
-    def process_documents(self, documents: List[Document]):
-        """Process multiple documents and create unified index"""
+        # LLM 參數
+        self.llm_params = {
+            "decoding_method": "greedy",
+            "max_new_tokens": 500,
+            "min_new_tokens": 0,
+            "repetition_penalty": 1
+        }
+        
+        # 初始化嵌入模型 - 使用支援繁體中文的多語言模型
         try:
-            all_chunks = []
+            self.embedding_model = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+            print("本地嵌入模型載入成功")
+        except Exception as e:
+            print(f"載入嵌入模型出錯: {str(e)}")
+            self.embedding_model = None
             
-            # Process each document
+        # 文本分割器
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000, 
+            chunk_overlap=100
+        )
+        
+        # 儲存文檔和嵌入的空間
+        self.chunks = []
+        self.vector_store = None
+        
+    def process_documents(self, documents: List[Document]) -> int:
+        """處理多個文檔並創建索引"""
+        if not documents or not self.embedding_model:
+            return 0
+            
+        try:
+            # 文檔分塊
+            all_texts = []
             for doc in documents:
-                #print(f"Processing document: {doc.metadata.get('source', 'unnamed')}")
-                chunks = self._create_chunks(doc.content)
-                #print(f"Created {len(chunks)} chunks")
-                
-                # Add source document info to each chunk
+                chunks = self.text_splitter.split_text(doc.content)
                 for chunk in chunks:
-                    all_chunks.append({
-                        'content': chunk,
-                        'metadata': doc.metadata
-                    })
+                    all_texts.append((chunk, doc.metadata))
                 
-            self.chunks = all_chunks
-            #print(f"Total chunks created: {len(all_chunks)}")
+            self.chunks = all_texts
+            print(f"文檔分割為 {len(self.chunks)} 個塊")
             
-            # Generate embeddings for all chunks
-            chunk_texts = [chunk['content'] for chunk in all_chunks]
-            #print("Generating embeddings...")
-            embeddings = self.embedding_model.encode(chunk_texts)
-            #print(f"Generated {len(embeddings)} embeddings")
+            # 生成嵌入
+            texts_only = [text for text, _ in self.chunks]
+            embeddings = self.embedding_model.encode(texts_only)
             
-            # Create FAISS index
-            dimension = len(embeddings[0])
+            # 創建 FAISS 索引
+            dimension = embeddings.shape[1]
             self.vector_store = faiss.IndexFlatL2(dimension)
             self.vector_store.add(np.array(embeddings).astype('float32'))
-            print(f"Created FAISS index with dimension {dimension}")
             
-            return len(all_chunks)
+            return len(self.chunks)
             
         except Exception as e:
-            print(f"Error in process_documents: {str(e)}")
+            print(f"處理文檔時出錯: {str(e)}")
             return 0
-    
-    def _create_chunks(self, text: str) -> List[str]:
-        """Smart document chunking with comprehensive error handling"""
-        # Basic input validation
-        if not text or not isinstance(text, str):
-            print("Warning: Invalid input to _create_chunks")
-            return []
             
-        try:
-            # Clean and validate text
-            text = re.sub(r'\s+', ' ', text).strip()
-            if not text:
-                print("Warning: Empty text after cleaning")
-                return []
-            
-            # Initialize chunks list
-            chunks = []
-            
-            # Section markers for medical documents
-            section_markers = ['症狀：', '治療：', '注意事項：', '術後照護：', '##', '===']
-            
-            # Try splitting by section markers first
-            has_sections = any(marker in text for marker in section_markers)
-            if has_sections:
-                for marker in section_markers:
-                    if marker in text:
-                        sections = text.split(marker)
-                        for i, section in enumerate(sections):
-                            if section and isinstance(section, str) and section.strip():
-                                # Add marker back to all except first section
-                                chunk = (marker + section.strip()) if i > 0 else section.strip()
-                                chunks.append(chunk)
-                
-                if chunks:  # If we successfully created chunks using markers
-                    return chunks
-            
-            # Fallback to sliding window if no sections found or sections empty
-            text_length = len(text)
-            start = 0
-            
-            while start < text_length:
-                # Calculate end position with bounds checking
-                end = min(start + self.chunk_size, text_length)
-                if end <= start:
-                    break
-                    
-                # Extract chunk with validation
-                chunk = text[start:end]
-                if isinstance(chunk, str) and chunk.strip():
-                    chunks.append(chunk.strip())
-                
-                # Update start position with overlap
-                start = max(end - self.chunk_overlap, start + 1)  # Ensure forward progress
-                
-            return chunks
-            
-        except Exception as e:
-            print(f"Error in _create_chunks: {str(e)}")
-            return []
-
     def find_relevant_context(self, query: str, top_k: int = 3) -> str:
-        """基於使用者查詢搜尋相關文件內容"""
-        if not self.vector_store or not self.chunks:
-            print("Warning: Vector store or chunks not initialized")  # Debug log
+        """搜索相關文檔內容"""
+        if not self.vector_store or not self.chunks or not self.embedding_model:
             return ""
-                
-        try:
-            print(f"\nSearching for context related to: {query}")  # Debug log
             
-            # Generate query vector
+        try:
+            # 生成查詢向量
             query_vector = self.embedding_model.encode([query])
-                
-            # Search for most relevant document chunks
+            
+            # 執行向量搜索
             distances, indices = self.vector_store.search(
                 np.array(query_vector).astype('float32'), 
                 top_k
             )
             
-            print(f"Found {len(indices[0])} relevant chunks")  # Debug log
-                
-            # Get relevant document content with source info
-            relevant_chunks = []
-            for i, idx in enumerate(indices[0]):
-                chunk = self.chunks[idx]
-                source = chunk['metadata'].get('source', 'unknown')
-                content = chunk['content']
-                similarity = 1 / (1 + distances[0][i])  # Convert distance to similarity score
-                # print(f"\nChunk {i+1} (similarity: {similarity:.2f}):")  # Debug log
-                # print(f"Source: {source}")
-                # print(f"Content: {content[:100]}...")  # Print first 100 chars
-                relevant_chunks.append(f"來源: {source}\n相關度: {similarity:.2f}\n內容: {content}")
-                
-            return '\n\n---\n\n'.join(relevant_chunks)
-                
+            # 整合搜索結果
+            results = []
+            for idx in indices[0]:
+                if idx < len(self.chunks):
+                    text, metadata = self.chunks[idx]
+                    source = metadata.get('source', 'unknown')
+                    results.append(f"來源: {source}\n內容: {text}")
+            
+            return '\n\n---\n\n'.join(results)
+            
         except Exception as e:
-            print(f"Error in find_relevant_context: {str(e)}")
+            print(f"搜索相關上下文時出錯: {str(e)}")
             return ""
-
-    def generate_response(self, context: str, user_input: str, prompt_template: str, conversation_history: List[Dict] = None) -> Optional[str]:
-        """使用指定的prompt模板生成回應"""
-        # 組合歷史對話成文本
-        history_text = ""
-        if conversation_history:
-            for msg in conversation_history:
-                if msg["role"] == "user":
-                    history_text += f"使用者: {msg['content']}\n"
-                else:
-                    history_text += f"助理: {msg['content']}\n"
-        
-        # 將歷史對話加入prompt
-        prompt = prompt_template.format(
-            context=context,
-            user_input=user_input,
-            conversation_history=history_text
-        )
-
-        payload = {
-            "input": prompt,
-            "parameters": {
-                "decoding_method": "greedy",
-                "max_new_tokens": 1000,
-                "min_new_tokens": 0,
-                "repetition_penalty": 1
-            },
-            "model_id": "ibm/granite-3-8b-instruct",
-            "project_id": "d91fb3ca-54ec-462a-9a26-491104a1d49d"
-        }
-
+            
+    def refresh_token(self):
+        """刷新 IAM 令牌"""
+        self.iam_token = get_iam_token(self.api_key)
+        if self.iam_token:
+            self.headers["Authorization"] = f"Bearer {self.iam_token}"
+            return True
+        return False
+            
+    def generate_response(self, context: str, user_input: str, prompt_template: str, conversation_history: List[Dict] = None) -> str:
+        """使用 Llama 模型生成回應"""
         try:
+            # 確保令牌有效
+            if not self.iam_token:
+                self.refresh_token()
+                
+            # 準備對話歷史
+            history_text = ""
+            if conversation_history:
+                for msg in conversation_history[-3:]:  # 只使用最近3輪對話
+                    role = "使用者" if msg["role"] == "user" else "助理"
+                    history_text += f"{role}: {msg['content']}\n"
+            
+            # 使用模板格式化提示
+            prompt = prompt_template.format(
+                context=context[:1500] if context else "",  # 限制上下文長度
+                user_input=user_input,
+                conversation_history=history_text
+            )
+            
+            # 呼叫 API 生成回應
+            url = f"{self.watsonx_url}/ml/v1/text/generation?version=2023-05-29"
+            
+            payload = {
+                "input": prompt,
+                "parameters": self.llm_params,
+                "model_id": self.model_id,
+                "project_id": self.project_id
+            }
+            
             response = requests.post(
-                self.url,
+                url=url, 
+                headers=self.headers,
                 json=payload,
-                headers=self.headers
-            )
-            response.raise_for_status()
-            
-            return response.json().get('results', [{}])[0].get(
-                'generated_text',
-                None
+                timeout=15
             )
             
-        except requests.exceptions.RequestException as e:
-            print(f"API 請求失敗: {str(e)}")
-            return None
-        
+            # 處理 API 回應
+            if response.status_code == 200:
+                data = response.json()
+                if "results" in data and data["results"]:
+                    generated_text = data["results"][0].get("generated_text", "")
+                    
+                    # 清理回應內容
+                    special_tokens = [
+                        "<|begin_of_text|>", "<|end_of_text|>",
+                        "<|start_header_id|>system<|end_header_id|>",
+                        "<|start_header_id|>user<|end_header_id|>",
+                        "<|start_header_id|>assistant<|end_header_id|>",
+                        "<|eot_id|>"
+                    ]
+                    
+                    for token in special_tokens:
+                        generated_text = generated_text.replace(token, "")
+                    
+                    # 找到實際回應的開始
+                    if "您是一位" in generated_text or "請遵守以下準則" in generated_text:
+                        lines = generated_text.split('\n')
+                        processed_lines = []
+                        skip_lines = True
+                        
+                        for line in lines:
+                            if skip_lines and ("使用者:" in line or "助理:" in line or 
+                                             "歷史對話:" in line or "準則:" in line):
+                                continue
+                            else:
+                                skip_lines = False
+                                if line.strip():
+                                    processed_lines.append(line)
+                        
+                        generated_text = '\n'.join(processed_lines)
+                    
+                    return generated_text.strip() or "您好，請問有什麼可以幫您的嗎？"
+            
+            # 如果 API 調用失敗
+            print(f"API 調用失敗: {response.status_code}")
+            return "您好！我是您的醫療諮詢顧問。請問有什麼可以幫您的嗎？"
+            
+        except Exception as e:
+            print(f"生成回應時出錯: {str(e)}")
+            return "您好！很抱歉，我暫時無法處理您的請求。請問有什麼其他問題嗎？"

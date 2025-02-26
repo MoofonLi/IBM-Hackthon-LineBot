@@ -37,8 +37,8 @@ line_handler = WebhookHandler(os.getenv('CHANNEL_SECRET'))
 user_sessions: Dict[str, Dict] = {}
 
 # 指令常數 - 不轉換為小寫，保持原始格式
-QUESTIONNAIRE_START_COMMANDS = ["start questionnaire", "開始問診", "start questionnaire（開始問診）", "Questionnaire of Health (健康情況問卷)"]
-QUESTIONNAIRE_END_COMMANDS = ["end questionnaire", "結束問診", "end questionnaire（結束問診）", "End Questionnaire（結束問診）"]
+QUESTIONNAIRE_START_COMMANDS = ["start questionnaire", "開始問卷", "start questionnaire（開始問卷）", "Questionnaire of Health (健康情況問卷)"]
+QUESTIONNAIRE_END_COMMANDS = ["end questionnaire", "結束問卷", "end questionnaire（結束問卷）", "End Questionnaire（結束問卷）"]
 POSTOP_START_COMMANDS = ["postoperative care", "術後照護", "postoperative care（術後照護）", "Postoperative Care（術後照護）"]
 POSTOP_END_COMMANDS = ["end care", "結束照護", "end care（結束照護）", "End Care（結束照護）"]
 
@@ -51,7 +51,7 @@ def get_or_create_session(user_id: str) -> Dict:
             "postop_data": [],
             "timestamp": datetime.now(),
             "conversation_history": [],  # 一般對話歷史
-            "questionnaire_history": [], # 問診對話歷史
+            "questionnaire_history": [], # 問卷對話歷史
             "postop_history": [],        # 術後照護對話歷史
             "current_context": ""
         }
@@ -73,7 +73,7 @@ def generate_questionnaire_form(questionnaire_data: list) -> str:
     return form
 
 def create_end_questionnaire_buttons():
-    """建立結束問診的快速回覆按鈕"""
+    """建立結束問卷的快速回覆按鈕"""
     return QuickReply(items=[
         QuickReplyItem(
             action=MessageAction(
@@ -169,7 +169,7 @@ def handle_message(event):
             
         elif received_message in QUESTIONNAIRE_START_COMMANDS:
             session["state"] = "questionnaire"
-            session["questionnaire_history"] = []  # 清空問診歷史
+            session["questionnaire_history"] = []  # 清空問卷歷史
             message = TextMessage(
                 text="您好，可以先告訴我你的基本資料嗎",
                 quick_reply=create_end_questionnaire_buttons()
@@ -180,8 +180,8 @@ def handle_message(event):
             form_response = generate_questionnaire_form(session["questionnaire_data"])
             session["state"] = "free_chat"
             session["questionnaire_data"] = []
-            session["questionnaire_history"] = []  # 清空問診歷史
-            message = TextMessage(text=f"問診已結束。已生成記錄表：\n{form_response}")
+            session["questionnaire_history"] = []  # 清空問卷歷史
+            message = TextMessage(text=f"問卷已結束。已生成記錄表：\n{form_response}")
             
         elif received_message in POSTOP_END_COMMANDS and session["state"] == "postop_care":
             session["state"] = "free_chat"
@@ -280,4 +280,4 @@ def handle_message(event):
         )
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)
