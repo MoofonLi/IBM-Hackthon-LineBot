@@ -6,6 +6,7 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+import time  # 新增 time 模組
 
 @dataclass
 class Document:
@@ -41,10 +42,11 @@ class WatsonX:
         
         # 獲取令牌
         self.iam_token = get_iam_token(self.api_key)
+        self.token_timestamp = time.time() if self.iam_token else 0  # 新增令牌時間戳
         self.headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.iam_token}"
+            "Authorization": f"Bearer {self.iam_token}" if self.iam_token else ""
         }
         
         # LLM 參數
@@ -72,7 +74,27 @@ class WatsonX:
         # 儲存文檔和嵌入的空間
         self.chunks = []
         self.vector_store = None
+    
+    def is_token_expired(self):
+        """檢查令牌是否過期或接近過期（預設55分鐘為界限）"""
+        if not self.iam_token or not self.token_timestamp:
+            return True
+        # 令牌有效期通常為1小時，我們設定55分鐘就刷新，提前預防過期
+        return (time.time() - self.token_timestamp) > (55 * 60)  
         
+    def refresh_token(self):
+        """刷新 IAM 令牌"""
+        print("嘗試刷新 IAM 令牌...")
+        new_token = get_iam_token(self.api_key)
+        if new_token:
+            self.iam_token = new_token
+            self.token_timestamp = time.time()
+            self.headers["Authorization"] = f"Bearer {self.iam_token}"
+            print("令牌刷新成功")
+            return True
+        print("令牌刷新失敗")
+        return False
+            
     def process_documents(self, documents: List[Document]) -> int:
         """處理多個文檔並創建索引"""
         if not documents or not self.embedding_model:
@@ -133,20 +155,14 @@ class WatsonX:
             print(f"搜索相關上下文時出錯: {str(e)}")
             return ""
             
-    def refresh_token(self):
-        """刷新 IAM 令牌"""
-        self.iam_token = get_iam_token(self.api_key)
-        if self.iam_token:
-            self.headers["Authorization"] = f"Bearer {self.iam_token}"
-            return True
-        return False
-            
     def generate_response(self, context: str, user_input: str, prompt_template: str, conversation_history: List[Dict] = None) -> str:
         """使用 Llama 模型生成回應"""
         try:
-            # 確保令牌有效
-            if not self.iam_token:
-                self.refresh_token()
+            # 檢查令牌是否需要刷新
+            if not self.iam_token or self.is_token_expired():
+                print("令牌不存在或已過期，嘗試刷新...")
+                if not self.refresh_token():
+                    return "很抱歉，無法連接到服務。請稍後再試。"
                 
             # 準備對話歷史
             history_text = ""
@@ -172,53 +188,69 @@ class WatsonX:
                 "project_id": self.project_id
             }
             
-            response = requests.post(
-                url=url, 
-                headers=self.headers,
-                json=payload,
-                timeout=15
-            )
-            
-            # 處理 API 回應
-            if response.status_code == 200:
-                data = response.json()
-                if "results" in data and data["results"]:
-                    generated_text = data["results"][0].get("generated_text", "")
-                    
-                    # 清理回應內容
-                    special_tokens = [
-                        "<|begin_of_text|>", "<|end_of_text|>",
-                        "<|start_header_id|>system<|end_header_id|>",
-                        "<|start_header_id|>user<|end_header_id|>",
-                        "<|start_header_id|>assistant<|end_header_id|>",
-                        "<|eot_id|>"
-                    ]
-                    
-                    for token in special_tokens:
-                        generated_text = generated_text.replace(token, "")
-                    
-                    # 找到實際回應的開始
-                    if "您是一位" in generated_text or "請遵守以下準則" in generated_text:
-                        lines = generated_text.split('\n')
-                        processed_lines = []
-                        skip_lines = True
+            max_retries = 2
+            for attempt in range(max_retries):
+                response = requests.post(
+                    url=url, 
+                    headers=self.headers,
+                    json=payload,
+                    timeout=30
+                )
+                
+                # 處理 API 回應
+                if response.status_code == 200:
+                    data = response.json()
+                    if "results" in data and data["results"]:
+                        generated_text = data["results"][0].get("generated_text", "")
                         
-                        for line in lines:
-                            if skip_lines and ("使用者:" in line or "助理:" in line or 
-                                             "歷史對話:" in line or "準則:" in line):
-                                continue
-                            else:
-                                skip_lines = False
-                                if line.strip():
-                                    processed_lines.append(line)
+                        # 清理回應內容
+                        special_tokens = [
+                            "<|begin_of_text|>", "<|end_of_text|>",
+                            "<|start_header_id|>system<|end_header_id|>",
+                            "<|start_header_id|>user<|end_header_id|>",
+                            "<|start_header_id|>assistant<|end_header_id|>",
+                            "<|eot_id|>"
+                        ]
                         
-                        generated_text = '\n'.join(processed_lines)
-                    
-                    return generated_text.strip() or "您好，請問有什麼可以幫您的嗎？"
+                        for token in special_tokens:
+                            generated_text = generated_text.replace(token, "")
+                                
+                        # 找到實際回應的開始
+                        if "您是一位" in generated_text or "請遵守以下準則" in generated_text:
+                            lines = generated_text.split('\n')
+                            processed_lines = []
+                            skip_lines = True
+                            
+                            for line in lines:
+                                if skip_lines and ("使用者:" in line or "助理:" in line or 
+                                                "歷史對話:" in line or "準則:" in line):
+                                    continue
+                                else:
+                                    skip_lines = False
+                                    if line.strip():
+                                        processed_lines.append(line)
+                            
+                            generated_text = '\n'.join(processed_lines)
+                        
+                        return generated_text.strip() or "您好，請問有什麼可以幫您的嗎？"
+                        
+                # 處理令牌過期情況
+                elif response.status_code == 401:
+                    print(f"令牌已過期（嘗試 {attempt+1}/{max_retries}），正在刷新...")
+                    if self.refresh_token() and attempt < max_retries - 1:
+                        continue  # 重試請求
+                    else:
+                        print("令牌刷新失敗或已達最大重試次數")
+                        break
+                else:
+                    print(f"API 調用失敗: {response.status_code}")
+                    if attempt < max_retries - 1:
+                        print(f"嘗試重試 {attempt+2}/{max_retries}...")
+                        continue
+                    break
             
-            # 如果 API 調用失敗
-            print(f"API 調用失敗: {response.status_code}")
-            return "您好！我是您的醫療諮詢顧問。請問有什麼可以幫您的嗎？"
+            # 如果所有嘗試都失敗
+            return "您好！很抱歉，我暫時無法連接到服務。請稍後再試。"
             
         except Exception as e:
             print(f"生成回應時出錯: {str(e)}")

@@ -1,4 +1,5 @@
 version: '3'
+
 services:
   linebot:
     build: .
@@ -6,6 +7,17 @@ services:
       - "5000:5000"
     volumes:
       - .:/app
+      - ./docs:/app/docs
     env_file:
       - .env
     restart: always
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    command: "http linebot:5000"  # 移除domain參數
+    depends_on:
+      - linebot
+    ports:
+      - "4040:4040"  # Ngrok web介面
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
