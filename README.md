@@ -2,5 +2,4 @@
 
 <img src="https://github.com/MoofonLi/IBM-Hackthon-LineBot/blob/main/intro/QR_code.png?raw=true" alt="QR Code">
 
-
 <h1><a href="https://youtube.com/shorts/j-gggVMVwOk" target="_blank">Watch Demo Video</a></h1>
